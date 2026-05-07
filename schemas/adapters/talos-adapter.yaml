@@ -51,6 +51,7 @@ spec:
         ref: KubernetesCluster.notification_surface + KubernetesNode.notification_surface
 
   conformance_matrix: []
+  conformance_matrix_semantics: inherited_from_mapping_ref
 
   mapping_ref: mappings/talos-machineconfig-mapping.yaml
   conformance_proof: mapping-complete
