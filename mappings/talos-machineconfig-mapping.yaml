@@ -17,7 +17,12 @@ mappings:
   - cic_path: KubernetesCluster.config_surface.kubernetes_version
     talos_path: cluster.kubernetesVersion
     talos_type: string
-    note: pl. "1.32.0" — Talos v prefix nélkül
+    transform:
+      strip_prefix: "v"
+      note: >
+        CIC formátum: "v1.32.0" (v prefix-szel).
+        Talos formátum: "1.32.0" (v prefix nélkül).
+        Az adapter strip_prefix: "v" transzformációt alkalmaz CIC → Talos irányban.
 
   - cic_path: KubernetesCluster.config_surface.control_plane_endpoint
     talos_path: cluster.controlPlane.endpoint
@@ -126,8 +131,24 @@ mappings:
   # ── KubernetesNode state_surface ─────────────────────────────────────────────
 
   - cic_path: KubernetesNode.state_surface.node_status
-    talos_source: kubectl get node <name> -o jsonpath='{.status.conditions[-1].type}'
-    note: Adapter normalizálja → Ready/NotReady/SchedulingDisabled/Unknown
+    derivation:
+      sources:
+        - field: status.conditions[?(@.type=="Ready")].status
+          tool: kubectl
+          resource: node
+          note: "True=Ready, False=NotReady, nincs=Unknown"
+        - field: spec.unschedulable
+          tool: kubectl
+          resource: node
+          note: "true=SchedulingDisabled (cordon)"
+      logic: >
+        if spec.unschedulable == true → SchedulingDisabled
+        else if Ready.status == "True" → Ready
+        else if Ready.status == "False" → NotReady
+        else → Unknown
+    bug_fix: >
+      conditions[-1] NEM megbízható — a Ready condition nem garantáltan az utolsó.
+      A helyes megközelítés: conditions szűrés type=="Ready" alapján + spec.unschedulable.
 
   - cic_path: KubernetesNode.state_surface.kubelet_version
     talos_source: kubectl get node <name> -o jsonpath='{.status.nodeInfo.kubeletVersion}'

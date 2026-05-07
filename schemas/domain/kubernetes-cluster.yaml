@@ -55,7 +55,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: config
-        mandatory: true
+        required_on_create: true
         description: Kubernetes verzió (pl. v1.32.0)
 
       - name: control_plane_endpoint
@@ -63,7 +63,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: config
-        mandatory: true
+        required_on_create: true
         description: API server endpoint URL (pl. https://k8s.example.com:6443)
 
       - name: control_plane_count
@@ -71,35 +71,39 @@ spec:
         shape_type: scalar
         scalar_type: integer
         role: config
-        mandatory: true
+        required_on_create: false
         default: 1
-        description: Control plane node-ok száma (1 = single, 3 = HA)
+        description: Control plane node-ok száma — 1 (single) vagy páratlan (HA)
         contract:
-          - type: enum
-            expression: [1, 3]
+          - type: minimum
+            expression: "1"
+          - type: policy
+            expression: odd_or_one
+            recommended: [1, 3, 5]
+            note: HA cluster split-brain elkerüléséhez páratlan szám szükséges
 
       # ── Cluster networking (Talos cluster.network) ────────────────────────────
       - name: cluster_network
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: object
         role: config
-        mandatory: true
+        required_on_create: true
         description: Cluster hálózati konfiguráció
         properties:
           - name: pod_cidr
             shape_type: scalar
             scalar_type: string
-            mandatory: true
+            required_on_create: true
             description: Pod hálózati CIDR (pl. 10.244.0.0/16)
           - name: service_cidr
             shape_type: scalar
             scalar_type: string
-            mandatory: true
+            required_on_create: true
             description: Service hálózati CIDR (pl. 10.96.0.0/12)
           - name: dns_domain
             shape_type: scalar
             scalar_type: string
-            mandatory: false
+            required_on_create: false
             default: cluster.local
             description: Cluster DNS domain
 
@@ -108,68 +112,68 @@ spec:
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: object
         role: config
-        optional: true
+        required_on_create: false
         description: API server konfiguráció
         properties:
           - name: extra_args
             shape_type: object
-            optional: true
+            required_on_create: false
             description: Extra API server argumentumok (key-value map)
           - name: cert_sans
             shape_type: collection
             collection_variant: list
-            optional: true
+            required_on_create: false
             description: Extra TLS SAN-ek az API server certifikáthoz
           - name: audit_policy
             shape_type: scalar
             scalar_type: string
-            optional: true
+            required_on_create: false
             description: Audit policy YAML (inline)
 
       - name: etcd
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: object
         role: config
-        optional: true
+        required_on_create: false
         description: etcd konfiguráció
         properties:
           - name: extra_args
             shape_type: object
-            optional: true
+            required_on_create: false
           - name: subnet
             shape_type: scalar
             scalar_type: string
-            optional: true
+            required_on_create: false
             description: etcd peer kommunikáció subnet (pl. 192.168.0.0/24)
 
       - name: controller_manager
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: object
         role: config
-        optional: true
+        required_on_create: false
         description: Controller manager konfiguráció
         properties:
           - name: extra_args
             shape_type: object
-            optional: true
+            required_on_create: false
 
       - name: scheduler
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: object
         role: config
-        optional: true
+        required_on_create: false
         description: Scheduler konfiguráció
         properties:
           - name: extra_args
             shape_type: object
-            optional: true
+            required_on_create: false
 
       # ── CoreDNS (Talos cluster.coreDNS) ──────────────────────────────────────
       - name: coredns
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: object
         role: config
-        optional: true
+        required_on_create: false
         description: CoreDNS konfiguráció
         properties:
           - name: disabled
@@ -179,7 +183,7 @@ spec:
           - name: image
             shape_type: scalar
             scalar_type: string
-            optional: true
+            required_on_create: false
             description: "CoreDNS container image (default: Talos-bundled)"
 
       # ── Node pools — compute követelmények (D-005) ───────────────────────────
@@ -188,7 +192,7 @@ spec:
         shape_type: collection
         collection_variant: list
         role: config
-        mandatory: true
+        required_on_create: true
         description: >
           Node pool definíciók — compute követelmények, nem konkrét gép referenciák.
           A konkrét ComputeResource hozzárendelés az adapter feladata (D-005).
@@ -202,38 +206,38 @@ spec:
           - name: machine_type
             shape_type: scalar
             scalar_type: string
-            mandatory: true
+            required_on_create: true
             contract:
               - type: enum
                 expression: [controlplane, worker]
           - name: count
             shape_type: scalar
             scalar_type: integer
-            mandatory: true
+            required_on_create: true
             description: Kívánt node szám ebben a pool-ban
           - name: compute_requirements
             shape_type: object
-            optional: true
+            required_on_create: false
             description: Compute erőforrás követelmények — az adapter ezek alapján választ ComputeResource-t
             properties:
               - name: min_cpu
                 shape_type: scalar
                 scalar_type: integer
-                optional: true
+                required_on_create: false
                 description: Minimum CPU magok száma
               - name: min_memory_gb
                 shape_type: scalar
                 scalar_type: integer
-                optional: true
+                required_on_create: false
                 description: Minimum memória GB-ban
               - name: min_disk_gb
                 shape_type: scalar
                 scalar_type: integer
-                optional: true
+                required_on_create: false
                 description: Minimum boot disk GB-ban
               - name: compute_tags
                 shape_type: object
-                optional: true
+                required_on_create: false
                 description: Label/tag szűrők a ComputeResource kiválasztáshoz
 
       # ── Discovery (Talos cluster.discovery) ───────────────────────────────────
@@ -241,7 +245,7 @@ spec:
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: object
         role: config
-        optional: true
+        required_on_create: false
         description: Node discovery konfiguráció
         properties:
           - name: enabled
@@ -250,7 +254,7 @@ spec:
             default: true
           - name: registries
             shape_type: object
-            optional: true
+            required_on_create: false
 
   # ── StateSurface ──────────────────────────────────────────────────────────────
   state_surface:
@@ -266,7 +270,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: state
-        mandatory: true
+        required_on_create: true
         description: Cluster összesített egészségi állapota
         contract:
           - type: enum
@@ -277,7 +281,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: state
-        mandatory: true
+        required_on_create: true
         contract:
           - type: enum
             expression: [up, down, unknown]
@@ -287,7 +291,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: state
-        mandatory: true
+        required_on_create: true
         contract:
           - type: enum
             expression: [healthy, degraded, unavailable, unknown]
@@ -297,7 +301,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: state
-        optional: true
+        required_on_create: false
         description: Tényleges futó Kubernetes verzió
 
       - name: node_count
@@ -305,7 +309,7 @@ spec:
         shape_type: scalar
         scalar_type: integer
         role: operational
-        optional: true
+        required_on_create: false
         description: Összes node szám
 
       - name: control_plane_node_count
@@ -313,14 +317,14 @@ spec:
         shape_type: scalar
         scalar_type: integer
         role: operational
-        optional: true
+        required_on_create: false
 
       - name: cert_expiry
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: scalar
         scalar_type: string
         role: state
-        optional: true
+        required_on_create: false
         description: Legkorábbi lejáró cert időbélyege (ISO 8601)
 
   # ── OperationSurface ──────────────────────────────────────────────────────────
@@ -338,7 +342,7 @@ spec:
           - name: target_version
             shape_type: scalar
             scalar_type: string
-            mandatory: true
+            required_on_create: true
         output:
           - name: kubernetes_version_actual
             shape_type: scalar

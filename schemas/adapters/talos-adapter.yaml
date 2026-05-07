@@ -22,7 +22,12 @@ spec:
 
   protocol: gRPC (Talos API v1alpha1)
   implementation: Talos Linux — https://www.talos.dev
-  conformance: full
+  conformance: full-with-orchestration
+  orchestration_required: true
+  orchestration_scope:
+    - control_plane_count enforcement (adapter dönti el hány controlplane node kerül létre)
+    - node_pools compute matching (adapter választ ComputeResource-t a requirements alapján)
+    - node bootstrap sequencing (control plane előbb, worker utána)
 
   operations:
     - name: observe

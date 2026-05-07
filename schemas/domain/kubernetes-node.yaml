@@ -55,7 +55,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: config
-        mandatory: true
+        required_on_create: true
         description: Node szerepe a clusterben
         contract:
           - type: enum
@@ -66,7 +66,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: reference
-        mandatory: true
+        required_on_create: true
         description: A KubernetesCluster CIC address-e amelyhez ez a node tartozik
 
       # ── Install disk (Talos machine.install) ─────────────────────────────────
@@ -75,7 +75,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: config
-        mandatory: true
+        required_on_create: true
         description: >
           Boot disk eszköz path VAGY StorageResource CIC address.
           Eszköz path: "/dev/sda" (Talos natív — legtöbb esetben ez)
@@ -87,7 +87,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: config
-        optional: true
+        required_on_create: false
         description: "Node hostname (default: compute_ref alapján generált)"
 
       # ── Kubelet konfiguráció (Talos machine.kubelet) ──────────────────────────
@@ -95,21 +95,21 @@ spec:
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: object
         role: config
-        optional: true
+        required_on_create: false
         description: kubelet konfiguráció
         properties:
           - name: extra_args
             shape_type: object
-            optional: true
+            required_on_create: false
             description: Extra kubelet argumentumok
           - name: node_labels
             shape_type: object
-            optional: true
+            required_on_create: false
             description: Kubernetes node label-ek (key-value map)
           - name: node_taints
             shape_type: collection
             collection_variant: list
-            optional: true
+            required_on_create: false
             description: Kubernetes node taint-ek
             item_fields:
               - name: key
@@ -119,7 +119,7 @@ spec:
               - name: value
                 shape_type: scalar
                 scalar_type: string
-                optional: true
+                required_on_create: false
               - name: effect
                 shape_type: scalar
                 scalar_type: string
@@ -132,7 +132,7 @@ spec:
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: object
         role: config
-        optional: true
+        required_on_create: false
         description: Kernel paraméterek (key-value map, pl. net.ipv4.ip_forward=1)
 
       - name: ntp_servers
@@ -140,7 +140,7 @@ spec:
         shape_type: collection
         collection_variant: list
         role: config
-        optional: true
+        required_on_create: false
         description: NTP szerver(ek) időszinkronizációhoz
         item_fields:
           - name: server
@@ -154,7 +154,7 @@ spec:
         shape_type: collection
         collection_variant: list
         role: config
-        optional: true
+        required_on_create: false
         description: Extra TLS SAN-ek a node certifikáthoz
         item_fields:
           - name: san
@@ -177,7 +177,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: state
-        optional: true
+        required_on_create: false
         description: >
           A tényleges ComputeResource CIC address-e amelyen ez a node fut.
           Az adapter tölti ki miután a config materializálódott egy konkrét gépen.
@@ -188,7 +188,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: state
-        optional: true
+        required_on_create: false
         description: >
           A node elsődleges hálózati interfészének CIC address-e (cic-network domain).
           Az adapter tölti ki a materializáció után.
@@ -198,7 +198,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: state
-        mandatory: true
+        required_on_create: true
         description: Kubernetes node kondíció (kubectl get node STATUS)
         contract:
           - type: enum
@@ -209,7 +209,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: state
-        optional: true
+        required_on_create: false
         description: Futó kubelet verzió
 
       - name: os_version
@@ -217,7 +217,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: state
-        optional: true
+        required_on_create: false
         description: Node operációs rendszer verzió
 
       - name: allocatable_cpu
@@ -225,7 +225,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: operational
-        optional: true
+        required_on_create: false
         description: Schedulable CPU kapacitás (pl. "3920m")
 
       - name: allocatable_memory
@@ -233,7 +233,7 @@ spec:
         shape_type: scalar
         scalar_type: string
         role: operational
-        optional: true
+        required_on_create: false
         description: Schedulable memória kapacitás (pl. "7.5Gi")
 
       - name: allocated_pods
@@ -241,7 +241,7 @@ spec:
         shape_type: scalar
         scalar_type: integer
         role: operational
-        optional: true
+        required_on_create: false
         description: Aktuálisan futó Pod-ok száma
 
       - name: conditions
@@ -249,7 +249,7 @@ spec:
         shape_type: collection
         collection_variant: list
         role: state
-        optional: true
+        required_on_create: false
         description: Node condition-ök (MemoryPressure, DiskPressure, PIDPressure, Ready)
         item_fields:
           - name: type
@@ -265,7 +265,7 @@ spec:
           - name: reason
             shape_type: scalar
             scalar_type: string
-            optional: true
+            required_on_create: false
 
   # ── OperationSurface ──────────────────────────────────────────────────────────
   operation_surface:
@@ -339,7 +339,7 @@ spec:
           - name: target_version
             shape_type: scalar
             scalar_type: string
-            mandatory: true
+            required_on_create: true
         output:
           - name: os_version
             shape_type: scalar
@@ -358,7 +358,7 @@ spec:
           - name: confirm
             shape_type: scalar
             scalar_type: boolean
-            mandatory: true
+            required_on_create: true
           - name: graceful
             shape_type: scalar
             scalar_type: boolean
