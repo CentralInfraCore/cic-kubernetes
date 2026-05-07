@@ -38,6 +38,23 @@ dependencies:
       - schemas/index.yaml
       - dependencies/
 
+  - name: cic-compute
+    source: github.com/CentralInfraCore/cic-compute
+    tag: compute/@v0.2.1
+    mode: reference
+    purpose: cross-domain-ref
+    referenced_fields:
+      - KubernetesNode.state_surface.compute_ref
+      - KubernetesCluster.config_surface.node_pools[].compute_requirements
+
+  - name: cic-network
+    source: github.com/CentralInfraCore/cic-network
+    tag: network/@v0.2.0
+    mode: reference
+    purpose: cross-domain-ref
+    referenced_fields:
+      - KubernetesNode.state_surface.network_ref
+
   - name: talos-machineconfig
     source: https://www.talos.dev/latest/reference/configuration/
     tag: v1alpha1
