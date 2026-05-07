@@ -25,7 +25,7 @@ entries:
   # ── Phase 2: Domain sémák ───────────────────────────────────────────────────
 
   - task: "kubernetes-cluster-schema"
-    status: pending
+    status: done
     priority: 2
     milestone: domain
     blocked_by: "repo-bootstrap"
@@ -69,7 +69,7 @@ entries:
       - schemas/domain/kubernetes-cluster.yaml
 
   - task: "kubernetes-node-schema"
-    status: pending
+    status: done
     priority: 3
     milestone: domain
     blocked_by: "kubernetes-cluster-schema"
@@ -113,7 +113,7 @@ entries:
   # ── Phase 3: Adapter contractok ─────────────────────────────────────────────
 
   - task: "talos-adapter"
-    status: pending
+    status: done
     priority: 4
     milestone: adapters
     blocked_by: "kubernetes-node-schema"
@@ -127,7 +127,7 @@ entries:
       - schemas/adapters/talos-adapter.yaml
 
   - task: "k3s-adapter"
-    status: pending
+    status: done
     priority: 5
     milestone: adapters
     blocked_by: "kubernetes-node-schema"
@@ -139,3 +139,31 @@ entries:
     accept: make validate
     produces:
       - schemas/adapters/k3s-adapter.yaml
+
+  # ── Phase 4: Contract hardening ──────────────────────────────────────────────
+
+  - task: "talos-machineconfig-mapping"
+    status: done
+    priority: 6
+    milestone: contract-hardening
+    blocked_by: "talos-adapter"
+    prompt: |
+      Hozd létre a Talos MachineConfig → CIC mező mapping fájlt:
+      schemas/mappings/talos-machineconfig-mapping.yaml
+      Minden KubernetesCluster és KubernetesNode config mező mellé a Talos config path.
+    accept: make validate
+    produces:
+      - schemas/mappings/talos-machineconfig-mapping.yaml
+
+  - task: "adapter-conformance-matrix"
+    status: done
+    priority: 7
+    milestone: contract-hardening
+    blocked_by: "talos-machineconfig-mapping"
+    prompt: |
+      Alakítsd át az adapter not_implemented_fields listákat gépileg ellenőrizhető
+      conformance_matrix struktúrára minden adapter fájlban.
+      Formátum: target (CIC path), type (operation/config_field/capability), support, reason.
+    accept: make validate
+    produces:
+      - schemas/adapters/*.yaml (frissítve)

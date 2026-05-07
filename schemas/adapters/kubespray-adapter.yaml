@@ -41,31 +41,38 @@ spec:
       output:
         stream: false
 
-  not_implemented_fields:
-    - field: sysctls
+  conformance_matrix:
+    - target: KubernetesNode.config_surface.sysctls
+      type: config_field
+      support: unsupported
       reason: OS-szintű konfig — külön Ansible role feladata
-      conformance: not_implemented
 
-    - field: ntp_servers
+    - target: KubernetesNode.config_surface.ntp_servers
+      type: config_field
+      support: unsupported
       reason: NTP az OS konfiguráció része — kubespray playbook nem kezeli direkt
-      conformance: not_implemented
 
-    - field: cert_sans
+    - target: KubernetesNode.config_surface.cert_sans
+      type: config_field
+      support: degraded
       reason: kubespray generálja a cert SANokat, manuális override korlátozott
-      conformance: not_implemented
 
-    - field: rotate_certs (operation)
+    - target: KubernetesCluster.operation_surface.rotate_certs
+      type: operation
+      support: unsupported
       reason: Cert rotáció manuális playbook — nem API-vezérelt
-      conformance: not_implemented
 
-    - field: node_reboot (capability)
+    - target: KubernetesNode.operation_surface.reboot
+      type: operation
+      support: unsupported
       reason: OS-szintű reboot — Ansible task, nem adapter API
-      conformance: not_implemented
 
-    - field: node_reset (capability)
+    - target: KubernetesNode.operation_surface.reset
+      type: operation
+      support: unsupported
       reason: reset-cluster.yml playbook — nem API-vezérelt
-      conformance: not_implemented
 
-    - field: discovery
+    - target: KubernetesCluster.config_surface.discovery
+      type: config_field
+      support: unsupported
       reason: kubespray nem használja a Talos discovery mechanizmust
-      conformance: not_implemented

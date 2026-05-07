@@ -1,0 +1,181 @@
+---
+metadata:
+  name: talos-machineconfig-mapping
+  version: v0.0.dev
+  description: >
+    CIC KubernetesCluster + KubernetesNode mező → Talos MachineConfig/ClusterConfig
+    path mapping. Ez a fájl a talos-adapter "full" conformance deklarációjának
+    bizonyítéka. A Talos csapat validálja.
+  anchor: Talos MachineConfig v1alpha1
+  anchor_ref: https://www.talos.dev/latest/reference/configuration/
+  owner: Gabor Zoltan Sinko
+
+mappings:
+
+  # ── KubernetesCluster config_surface ────────────────────────────────────────
+
+  - cic_path: KubernetesCluster.config_surface.kubernetes_version
+    talos_path: cluster.kubernetesVersion
+    talos_type: string
+    note: pl. "1.32.0" — Talos v prefix nélkül
+
+  - cic_path: KubernetesCluster.config_surface.control_plane_endpoint
+    talos_path: cluster.controlPlane.endpoint
+    talos_type: string
+    note: pl. "https://192.168.1.100:6443"
+
+  - cic_path: KubernetesCluster.config_surface.cluster_network.pod_cidr
+    talos_path: cluster.network.podSubnets[0]
+    talos_type: list<string>
+    note: Talos lista, CIC egyelőre egy CIDR-t vár
+
+  - cic_path: KubernetesCluster.config_surface.cluster_network.service_cidr
+    talos_path: cluster.network.serviceSubnets[0]
+    talos_type: list<string>
+
+  - cic_path: KubernetesCluster.config_surface.cluster_network.dns_domain
+    talos_path: cluster.network.dnsDomain
+    talos_type: string
+    default: cluster.local
+
+  - cic_path: KubernetesCluster.config_surface.api_server.extra_args
+    talos_path: cluster.apiServer.extraArgs
+    talos_type: map<string, string>
+
+  - cic_path: KubernetesCluster.config_surface.api_server.cert_sans
+    talos_path: cluster.apiServer.certSANs
+    talos_type: list<string>
+
+  - cic_path: KubernetesCluster.config_surface.api_server.audit_policy
+    talos_path: cluster.apiServer.auditPolicy
+    talos_type: string (inline YAML)
+
+  - cic_path: KubernetesCluster.config_surface.etcd.extra_args
+    talos_path: cluster.etcd.extraArgs
+    talos_type: map<string, string>
+
+  - cic_path: KubernetesCluster.config_surface.etcd.subnet
+    talos_path: cluster.etcd.subnet
+    talos_type: string
+
+  - cic_path: KubernetesCluster.config_surface.controller_manager.extra_args
+    talos_path: cluster.controllerManager.extraArgs
+    talos_type: map<string, string>
+
+  - cic_path: KubernetesCluster.config_surface.scheduler.extra_args
+    talos_path: cluster.scheduler.extraArgs
+    talos_type: map<string, string>
+
+  - cic_path: KubernetesCluster.config_surface.coredns.disabled
+    talos_path: cluster.coreDNS.disabled
+    talos_type: boolean
+
+  - cic_path: KubernetesCluster.config_surface.coredns.image
+    talos_path: cluster.coreDNS.image
+    talos_type: string
+
+  - cic_path: KubernetesCluster.config_surface.discovery.enabled
+    talos_path: cluster.discovery.enabled
+    talos_type: boolean
+
+  - cic_path: KubernetesCluster.config_surface.node_pools[].machine_type
+    talos_path: machine.type
+    talos_type: enum [controlplane, worker, init]
+    note: Per-node alkalmazva — a pool count az adapter orchestrációs feladata
+
+  # ── KubernetesNode config_surface ────────────────────────────────────────────
+
+  - cic_path: KubernetesNode.config_surface.machine_type
+    talos_path: machine.type
+    talos_type: enum [controlplane, worker]
+
+  - cic_path: KubernetesNode.config_surface.install_disk
+    talos_path: machine.install.disk
+    talos_type: string
+    note: Eszköz path (pl. /dev/sda) vagy block device
+
+  - cic_path: KubernetesNode.config_surface.hostname
+    talos_path: machine.network.hostname
+    talos_type: string
+
+  - cic_path: KubernetesNode.config_surface.kubelet.extra_args
+    talos_path: machine.kubelet.extraArgs
+    talos_type: map<string, string>
+
+  - cic_path: KubernetesNode.config_surface.kubelet.node_labels
+    talos_path: machine.nodeLabels
+    talos_type: map<string, string>
+
+  - cic_path: KubernetesNode.config_surface.kubelet.node_taints
+    talos_path: machine.nodeTaints
+    talos_type: map<string, string>
+    note: "Talos format: key=value:Effect — CIC strukturált list"
+
+  - cic_path: KubernetesNode.config_surface.sysctls
+    talos_path: machine.sysctls
+    talos_type: map<string, string>
+
+  - cic_path: KubernetesNode.config_surface.ntp_servers
+    talos_path: machine.time.servers
+    talos_type: list<string>
+
+  - cic_path: KubernetesNode.config_surface.cert_sans
+    talos_path: machine.certSANs
+    talos_type: list<string>
+
+  # ── KubernetesNode state_surface ─────────────────────────────────────────────
+
+  - cic_path: KubernetesNode.state_surface.node_status
+    talos_source: kubectl get node <name> -o jsonpath='{.status.conditions[-1].type}'
+    note: Adapter normalizálja → Ready/NotReady/SchedulingDisabled/Unknown
+
+  - cic_path: KubernetesNode.state_surface.kubelet_version
+    talos_source: kubectl get node <name> -o jsonpath='{.status.nodeInfo.kubeletVersion}'
+
+  - cic_path: KubernetesNode.state_surface.os_version
+    talos_source: talosctl get runtimesecuritystate -o jsonpath + /etc/os-release
+
+  - cic_path: KubernetesNode.state_surface.allocatable_cpu
+    talos_source: kubectl get node <name> -o jsonpath='{.status.allocatable.cpu}'
+
+  - cic_path: KubernetesNode.state_surface.allocatable_memory
+    talos_source: kubectl get node <name> -o jsonpath='{.status.allocatable.memory}'
+
+  - cic_path: KubernetesNode.state_surface.compute_ref
+    talos_source: adapter-internal
+    note: >
+      A Talos config nem tartalmazza — az adapter tölti ki a --nodes <IP> paraméterből
+      visszakeresve a ComputeResource CIC address-t (D-005).
+
+  # ── KubernetesCluster state_surface ──────────────────────────────────────────
+
+  - cic_path: KubernetesCluster.state_surface.health
+    talos_source: talosctl health --nodes <controlplane-ip>
+    note: Adapter aggregálja → healthy/degraded/unavailable/unknown
+
+  - cic_path: KubernetesCluster.state_surface.api_server_status
+    talos_source: kubectl cluster-info — API server elérhetőség
+
+  - cic_path: KubernetesCluster.state_surface.etcd_status
+    talos_source: talosctl etcd status
+
+  - cic_path: KubernetesCluster.state_surface.kubernetes_version_actual
+    talos_source: kubectl version --short
+
+  - cic_path: KubernetesCluster.state_surface.node_count
+    talos_source: kubectl get nodes --no-headers | wc -l
+
+  - cic_path: KubernetesCluster.state_surface.cert_expiry
+    talos_source: talosctl get secrets -o jsonpath (cert NotAfter field)
+
+
+not_mapped:
+  - cic_path: KubernetesCluster.config_surface.control_plane_count
+    reason: >
+      A Talos config nem tartalmaz cluster-szintű count-ot — az adapter
+      orchestrációs logikája hány controlplane node-ot hoz létre.
+
+  - cic_path: KubernetesCluster.config_surface.node_pools[].compute_requirements
+    reason: >
+      Talos-specifikus provisioning scope-on kívül — az adapter választja ki
+      a megfelelő ComputeResource-okat a követelmények alapján (D-005).

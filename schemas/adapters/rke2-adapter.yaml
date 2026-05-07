@@ -41,15 +41,18 @@ spec:
       output:
         stream: true
 
-  not_implemented_fields:
-    - field: sysctls
-      reason: RKE2 OS-szintű konfig az alaprendszer feladata — nem RKE2 API-n
-      conformance: not_implemented
+  conformance_matrix:
+    - target: KubernetesNode.config_surface.sysctls
+      type: config_field
+      support: unsupported
+      reason: OS-szintű konfig — alaprendszer feladata, nem RKE2 API-n
 
-    - field: ntp_servers
+    - target: KubernetesNode.config_surface.ntp_servers
+      type: config_field
+      support: unsupported
       reason: NTP az OS-szintű konfig — nem RKE2 hatásköre
-      conformance: not_implemented
 
-    - field: node_reset (capability)
-      reason: RKE2 uninstall script — nem API-vezérelt reset
-      conformance: not_implemented
+    - target: KubernetesNode.operation_surface.reset
+      type: operation
+      support: unsupported
+      reason: RKE2 uninstall script — nem API-vezérelt

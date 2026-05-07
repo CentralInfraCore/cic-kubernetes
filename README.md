@@ -1,51 +1,44 @@
-# cic-primitives
+# cic-kubernetes
 
-> Ez nem klasszikus repo. Ez AI-operált primitive schema layer.
 > Emberi belépő: ez a README. AI belépő: `ai/ONBOARDING.md`.
 
-A CIC **meta-séma rétege** — az a szint, amelyből minden domain objektum
-(switch interface, kubernetes pod, service, database, policy) schema-szinten levezethető.
+A CIC **Kubernetes cluster infrastruktúra domain** — cluster lifecycle, node pool,
+control plane konfiguráció és adapter contractok.
 
-Nem domain modell. Nem IaC tool. Nem YANG leíró.
+**Nem workload-management réteg.** Pod, Deployment, Service, Helm — NEM ide tartozik.
 
----
+## Scope
 
-## Két szint
-
-| Szint | Mit képvisel | Hol van |
-|---|---|---|
-| **atomic primitive** | 7 irreducibilis atom — Shape, Role, Behavior, Contract, Address, Identity, Event | `schemas/atomic/` |
-| **aggregate primitive** | Kompozíció sealed/defaulted/required slot-okkal | `schemas/aggregate/` |
-
-A domain objektum mindig következmény, soha nem kiindulópont.
-
----
-
-## Gyors start
-
-```bash
-make validate    # séma validáció — ha ez nem zöld, semmi sem kész
-make release     # signed artifact (Vault szükséges)
+```
+Belül:   cluster lifecycle, node pool, control plane, cert management
+Kívül:   Pod, Deployment, Service, RBAC, ConfigMap, Helm release
 ```
 
----
+## Kompozíciós lánc
 
-## AI belépési pontok
+```
+cic-primitives (@v0.1.3)  ← schema alap
+  └──► cic-kubernetes     ← ez a repo
+         ├── ref: cic-compute (@v0.2.1)
+         ├── ref: cic-network (@v0.2.0)
+         └── ref: talos-machineconfig (v1alpha1) — config anchor
+```
 
-| Fájl | Mire való |
+## Séma elemek
+
+| Fájl | Tartalom |
 |---|---|
-| `ai/ONBOARDING.md` | Boot protokoll — minden session elején |
-| `ai/MAINTENANCE_CONTRACT.md` | Mit szabad, mit nem, mikor kell döntés |
-| `ai/SYSTEM_CONTEXT.md` | Teljes architekturális kontextus |
-| `ai/PROMPTMAP.yaml` | Task queue — mi a következő konkrét lépés |
-| `ai/DECISIONS.md` | Döntési history — miért úgy van ahogy van |
+| `schemas/domain/kubernetes-cluster.yaml` | KubernetesCluster — cluster lifecycle |
+| `schemas/domain/kubernetes-node.yaml` | KubernetesNode — node bootstrap |
+| `schemas/adapters/talos-adapter.yaml` | Talos Linux (teljes) |
+| `schemas/adapters/k3s-adapter.yaml` | k3s (részleges) |
+| `schemas/adapters/rke2-adapter.yaml` | RKE2/Rancher (közel teljes) |
+| `schemas/adapters/kubespray-adapter.yaml` | kubespray/Ansible (részleges) |
+| `schemas/adapters/cloud-managed-adapter.yaml` | GKE, EKS, AKS, OKE, DOKS |
+| `mappings/talos-machineconfig-mapping.yaml` | Talos config → CIC mező mapping |
 
----
+## Mérce
 
-## Kapcsolódó repók
-
-| Repo | Kapcsolat |
-|---|---|
-| `base-repo` | upstream tooling (Makefile, CI, compiler) — `git merge base@0.5.0` |
-| `CIC-Relay` | runtime — primitívekből épülő sémákat futtatja |
-| domain repók | leszármazottak — `cic-primitives` a base-jük |
+```bash
+make validate   # ha nem zöld, semmi sem kész
+```

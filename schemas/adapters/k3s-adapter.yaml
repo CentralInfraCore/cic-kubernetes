@@ -40,23 +40,28 @@ spec:
       output:
         stream: true
 
-  not_implemented_fields:
-    - field: etcd
+  conformance_matrix:
+    - target: KubernetesCluster.config_surface.etcd
+      type: config_field
+      support: unsupported
       reason: k3s beépített SQLite vagy etcd-t használ — külső etcd konfig nem támogatott
-      conformance: not_implemented
 
-    - field: api_server.audit_policy
+    - target: KubernetesCluster.config_surface.api_server.audit_policy
+      type: config_field
+      support: unsupported
       reason: Audit konfig nem elérhető k3s default installban
-      conformance: not_implemented
 
-    - field: discovery
+    - target: KubernetesCluster.config_surface.discovery
+      type: config_field
+      support: unsupported
       reason: k3s saját node discovery mechanizmust használ (token-alapú)
-      conformance: not_implemented
 
-    - field: node_upgrade (capability)
+    - target: KubernetesNode.operation_surface.upgrade
+      type: operation
+      support: unsupported
       reason: k3s upgrade controller-en keresztül, nem direkt API-n
-      conformance: not_implemented
 
-    - field: node_reset (capability)
+    - target: KubernetesNode.operation_surface.reset
+      type: operation
+      support: unsupported
       reason: k3s-uninstall.sh script — nem API-vezérelt
-      conformance: not_implemented

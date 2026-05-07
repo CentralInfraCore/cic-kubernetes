@@ -50,5 +50,7 @@ spec:
         stream: true
         ref: KubernetesCluster.notification_surface + KubernetesNode.notification_surface
 
-  not_implemented_fields: []
-  note: Teljes implementáció — minden KubernetesCluster és KubernetesNode mező támogatott.
+  conformance_matrix: []
+  note: >
+    Teljes implementáció — minden KubernetesCluster és KubernetesNode mező támogatott.
+    Részletes CIC → Talos path mapping: schemas/mappings/talos-machineconfig-mapping.yaml

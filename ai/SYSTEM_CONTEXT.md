@@ -84,8 +84,10 @@ KubernetesCluster
 |---|---|
 | git bootstrap + primitives/@v0.1.3 merge | **defined** |
 | project.yaml + dependency.yaml | **defined** |
-| `schemas/domain/kubernetes-cluster.yaml` | **draft** |
-| `schemas/domain/kubernetes-node.yaml` | **draft** |
-| adapter contractok | **concept** |
+| `schemas/domain/kubernetes-cluster.yaml` | **defined** |
+| `schemas/domain/kubernetes-node.yaml` | **defined** |
+| adapter contractok (talos/k3s/rke2/kubespray/cloud-managed) | **defined** |
+| `schemas/mappings/talos-machineconfig-mapping.yaml` | **defined** |
+| adapter conformance_matrix (gépi format) | **defined** |
 | `make validate` zöld | **pending** |
 | első signed release | **concept** |
