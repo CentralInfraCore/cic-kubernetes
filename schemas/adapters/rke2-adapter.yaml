@@ -1,0 +1,55 @@
+---
+metadata:
+  name: rke2-adapter
+  version: v0.0.dev
+  description: >
+    RKE2 (Rancher Kubernetes Engine 2) adapter — enterprise on-prem Kubernetes,
+    CNCF konform, CIS hardened. Közel teljes implementáció.
+  owner: Gabor Zoltan Sinko
+  tags:
+    - adapter-contract
+    - kubernetes
+    - rke2
+    - rancher
+    - on-prem
+    - enterprise
+  validatedBy:
+    name: cic-primitives
+    version: v0.1.3
+
+spec:
+  kind: AdapterContract
+  domain: "cic:kubernetes:KubernetesCluster+KubernetesNode"
+
+  protocol: RKE2 API + systemd + kubectl
+  implementation: RKE2 — https://docs.rke2.io
+  conformance: near-full
+
+  operations:
+    - name: observe
+      description: kubectl get + rke2 systemctl status + etcd health check
+      output:
+        ref: KubernetesCluster.state_surface + KubernetesNode.state_surface
+
+    - name: apply
+      description: RKE2 config.yaml + systemctl restart rke2-server/agent
+      input:
+        ref: KubernetesCluster.config_surface + KubernetesNode.config_surface
+
+    - name: watch
+      description: kubectl watch + journald events
+      output:
+        stream: true
+
+  not_implemented_fields:
+    - field: sysctls
+      reason: RKE2 OS-szintű konfig az alaprendszer feladata — nem RKE2 API-n
+      conformance: not_implemented
+
+    - field: ntp_servers
+      reason: NTP az OS-szintű konfig — nem RKE2 hatásköre
+      conformance: not_implemented
+
+    - field: node_reset (capability)
+      reason: RKE2 uninstall script — nem API-vezérelt reset
+      conformance: not_implemented

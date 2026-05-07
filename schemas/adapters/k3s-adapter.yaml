@@ -1,0 +1,62 @@
+---
+metadata:
+  name: k3s-adapter
+  version: v0.0.dev
+  description: >
+    k3s lightweight Kubernetes adapter — on-prem, edge és resource-korlátozott
+    környezetekhez. Részleges implementáció — egyes enterprise funkciók hiányoznak.
+  owner: Gabor Zoltan Sinko
+  tags:
+    - adapter-contract
+    - kubernetes
+    - k3s
+    - on-prem
+    - lightweight
+  validatedBy:
+    name: cic-primitives
+    version: v0.1.3
+
+spec:
+  kind: AdapterContract
+  domain: "cic:kubernetes:KubernetesCluster+KubernetesNode"
+
+  protocol: k3s API + systemd + SSH/kubeconfig
+  implementation: k3s — https://k3s.io
+  conformance: partial
+
+  operations:
+    - name: observe
+      description: kubectl get + k3s systemctl status
+      output:
+        ref: KubernetesCluster.state_surface + KubernetesNode.state_surface
+
+    - name: apply
+      description: k3s install script + kubeconfig alkalmazás
+      input:
+        ref: KubernetesCluster.config_surface + KubernetesNode.config_surface
+
+    - name: watch
+      description: kubectl watch + journald events
+      output:
+        stream: true
+
+  not_implemented_fields:
+    - field: etcd
+      reason: k3s beépített SQLite vagy etcd-t használ — külső etcd konfig nem támogatott
+      conformance: not_implemented
+
+    - field: api_server.audit_policy
+      reason: Audit konfig nem elérhető k3s default installban
+      conformance: not_implemented
+
+    - field: discovery
+      reason: k3s saját node discovery mechanizmust használ (token-alapú)
+      conformance: not_implemented
+
+    - field: node_upgrade (capability)
+      reason: k3s upgrade controller-en keresztül, nem direkt API-n
+      conformance: not_implemented
+
+    - field: node_reset (capability)
+      reason: k3s-uninstall.sh script — nem API-vezérelt
+      conformance: not_implemented
