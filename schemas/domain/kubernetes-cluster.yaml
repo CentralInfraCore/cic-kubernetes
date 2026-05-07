@@ -1,0 +1,382 @@
+---
+metadata:
+  name: KubernetesCluster
+  version: v0.0.dev
+  description: >
+    Kubernetes cluster mint infrastrukturális egység — lifecycle, control plane
+    konfiguráció, cluster networking, cert management.
+    Anchor: Talos ClusterConfig v1alpha1 (dependency.yaml).
+    Scope: cluster infrastruktúra. Workload management (Pod, Deployment, Service) NEM ide tartozik.
+  owner: Gabor Zoltan Sinko
+  tags:
+    - domain-composition
+    - kubernetes
+    - cluster
+  validatedBy:
+    name: cic-primitives
+    version: v0.1.3
+
+spec:
+  kind: DomainComposition
+  base:
+    aggregate: ManagedEntity
+    ref: schemas/aggregate/managed-entity.yaml
+
+  # ── PolicySurface ─────────────────────────────────────────────────────────────
+  policy_surface:
+    default_access: open
+    default_modify: owner
+    surface_rules:
+      - surface: state_surface
+        modify: [OU=adapters,O=cic]
+      - surface: config_surface
+        access: [O=owner]
+        modify: [O=owner]
+    inherit_policy: true
+
+  # ── Identity ─────────────────────────────────────────────────────────────────
+  identity:
+    atomic_ref: schemas/atomic/identity.yaml
+    kind: KubernetesCluster
+    namespace: "cic:kubernetes"
+    version: v0.1.dev
+    base: "cic:core:ManagedEntity"
+    abstract: false
+    description: Kubernetes cluster infrastruktúra egység
+
+  # ── ConfigSurface ─────────────────────────────────────────────────────────────
+  config_surface:
+    aggregate_ref: schemas/aggregate/config-surface.yaml
+    nodes:
+
+      # ── Core ──────────────────────────────────────────────────────────────────
+      - name: kubernetes_version
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: config
+        mandatory: true
+        description: Kubernetes verzió (pl. v1.32.0)
+
+      - name: control_plane_endpoint
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: config
+        mandatory: true
+        description: API server endpoint URL (pl. https://k8s.example.com:6443)
+
+      - name: control_plane_count
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: integer
+        role: config
+        mandatory: true
+        default: 1
+        description: Control plane node-ok száma (1 = single, 3 = HA)
+        contract:
+          - type: enum
+            expression: [1, 3]
+
+      # ── Cluster networking (Talos cluster.network) ────────────────────────────
+      - name: cluster_network
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        mandatory: true
+        description: Cluster hálózati konfiguráció
+        properties:
+          - name: pod_cidr
+            shape_type: scalar
+            scalar_type: string
+            mandatory: true
+            description: Pod hálózati CIDR (pl. 10.244.0.0/16)
+          - name: service_cidr
+            shape_type: scalar
+            scalar_type: string
+            mandatory: true
+            description: Service hálózati CIDR (pl. 10.96.0.0/12)
+          - name: dns_domain
+            shape_type: scalar
+            scalar_type: string
+            mandatory: false
+            default: cluster.local
+            description: Cluster DNS domain
+
+      # ── Control plane komponensek (Talos cluster.apiServer stb.) ─────────────
+      - name: api_server
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        description: API server konfiguráció
+        properties:
+          - name: extra_args
+            shape_type: object
+            optional: true
+            description: Extra API server argumentumok (key-value map)
+          - name: cert_sans
+            shape_type: collection
+            collection_variant: list
+            optional: true
+            description: Extra TLS SAN-ek az API server certifikáthoz
+          - name: audit_policy
+            shape_type: scalar
+            scalar_type: string
+            optional: true
+            description: Audit policy YAML (inline)
+
+      - name: etcd
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        description: etcd konfiguráció
+        properties:
+          - name: extra_args
+            shape_type: object
+            optional: true
+          - name: subnet
+            shape_type: scalar
+            scalar_type: string
+            optional: true
+            description: etcd peer kommunikáció subnet (pl. 192.168.0.0/24)
+
+      - name: controller_manager
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        description: Controller manager konfiguráció
+        properties:
+          - name: extra_args
+            shape_type: object
+            optional: true
+
+      - name: scheduler
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        description: Scheduler konfiguráció
+        properties:
+          - name: extra_args
+            shape_type: object
+            optional: true
+
+      # ── CoreDNS (Talos cluster.coreDNS) ──────────────────────────────────────
+      - name: coredns
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        description: CoreDNS konfiguráció
+        properties:
+          - name: disabled
+            shape_type: scalar
+            scalar_type: boolean
+            default: false
+          - name: image
+            shape_type: scalar
+            scalar_type: string
+            optional: true
+            description: "CoreDNS container image (default: Talos-bundled)"
+
+      # ── Discovery (Talos cluster.discovery) ───────────────────────────────────
+      - name: discovery
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        description: Node discovery konfiguráció
+        properties:
+          - name: enabled
+            shape_type: scalar
+            scalar_type: boolean
+            default: true
+          - name: registries
+            shape_type: object
+            optional: true
+
+  # ── StateSurface ──────────────────────────────────────────────────────────────
+  state_surface:
+    aggregate_ref: schemas/aggregate/state-surface.yaml
+    source: kubernetes-adapter
+    freshness:
+      ttl: 30s
+      strategy: event-driven
+    nodes:
+
+      - name: health
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: state
+        mandatory: true
+        description: Cluster összesített egészségi állapota
+        contract:
+          - type: enum
+            expression: [healthy, degraded, unavailable, unknown]
+
+      - name: api_server_status
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: state
+        mandatory: true
+        contract:
+          - type: enum
+            expression: [up, down, unknown]
+
+      - name: etcd_status
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: state
+        mandatory: true
+        contract:
+          - type: enum
+            expression: [healthy, degraded, unavailable, unknown]
+
+      - name: kubernetes_version_actual
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: state
+        optional: true
+        description: Tényleges futó Kubernetes verzió
+
+      - name: node_count
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: integer
+        role: operational
+        optional: true
+        description: Összes node szám
+
+      - name: control_plane_node_count
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: integer
+        role: operational
+        optional: true
+
+      - name: cert_expiry
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: state
+        optional: true
+        description: Legkorábbi lejáró cert időbélyege (ISO 8601)
+
+  # ── OperationSurface ──────────────────────────────────────────────────────────
+  operation_surface:
+    aggregate_ref: schemas/aggregate/operation-surface.yaml
+    operations:
+
+      - name: upgrade
+        atomic_ref: schemas/atomic/behavior.yaml
+        type: operation
+        idempotent: false
+        capability: upgrade
+        description: Kubernetes verzió frissítése — rolling upgrade
+        input:
+          - name: target_version
+            shape_type: scalar
+            scalar_type: string
+            mandatory: true
+        output:
+          - name: kubernetes_version_actual
+            shape_type: scalar
+            scalar_type: string
+
+      - name: rotate_certs
+        atomic_ref: schemas/atomic/behavior.yaml
+        type: operation
+        idempotent: false
+        capability: cert_management
+        description: Cluster certifikátok rotálása
+        input: null
+        output:
+          - name: cert_expiry
+            shape_type: scalar
+            scalar_type: string
+
+      - name: get_kubeconfig
+        atomic_ref: schemas/atomic/behavior.yaml
+        type: operation
+        idempotent: true
+        description: Admin kubeconfig lekérdezése
+        input: null
+        output:
+          - name: kubeconfig
+            shape_type: scalar
+            scalar_type: string
+            description: base64-kódolt kubeconfig YAML
+
+  # ── NotificationSurface ───────────────────────────────────────────────────────
+  notification_surface:
+    events:
+      - name: cluster-health-changed
+        atomic_ref: schemas/atomic/event.yaml
+        trigger: state_change
+        severity: warning
+        description: Cluster egészségi állapot megváltozott
+        payload:
+          - name: previous_health
+            shape_type: scalar
+            scalar_type: string
+          - name: current_health
+            shape_type: scalar
+            scalar_type: string
+
+      - name: node-count-changed
+        atomic_ref: schemas/atomic/event.yaml
+        trigger: state_change
+        severity: info
+        description: Node számváltozás
+        payload:
+          - name: previous_count
+            shape_type: scalar
+            scalar_type: integer
+          - name: current_count
+            shape_type: scalar
+            scalar_type: integer
+
+      - name: cert-expiry-warning
+        atomic_ref: schemas/atomic/event.yaml
+        trigger: threshold
+        severity: warning
+        capability: cert_management
+        description: Cluster cert hamarosan lejár
+        payload:
+          - name: cert_expiry
+            shape_type: scalar
+            scalar_type: string
+          - name: days_remaining
+            shape_type: scalar
+            scalar_type: integer
+
+  # ── BindingSurface ────────────────────────────────────────────────────────────
+  binding_surface:
+    addresses:
+      - atomic_ref: schemas/atomic/address.yaml
+        schema_path: "/cic-kubernetes:clusters/cluster={provider},{location},{id}"
+        api_path: "/restconf/data/cic-kubernetes:clusters/cluster={provider},{location},{id}"
+        logical_id: "cic:kubernetes:{provider}:{location}:{id}"
+        namespace: "cic:kubernetes"
+        key_fields:
+          - name: provider
+            type: string
+            description: >
+              Cluster provider azonosítója — az adapter routing kulcsa.
+              talos: Talos Linux alapú cluster
+              kubespray: kubespray managed cluster
+              k3s: k3s lightweight cluster
+          - name: location
+            type: string
+            description: Datacenter / site azonosítója ahol a cluster fut
+          - name: id
+            type: string
+            description: Cluster egyedi neve (pl. prod-cluster-01)
+    adapter: kubernetes-adapter
