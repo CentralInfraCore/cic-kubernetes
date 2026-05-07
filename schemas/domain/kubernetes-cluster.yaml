@@ -434,3 +434,16 @@ spec:
             type: string
             description: Cluster egyedi neve (pl. prod-cluster-01)
     adapter: kubernetes-adapter
+
+# ── Relationships ─────────────────────────────────────────────────────────────
+relationships:
+  - name: owns_nodes
+    from: KubernetesCluster
+    to: KubernetesNode
+    cardinality: one-to-many
+    via:
+      child_field: KubernetesNode.config_surface.cluster_ref
+      parent_address: KubernetesCluster.binding_surface.logical_id
+    description: >
+      Egy cluster több node-ot kezél. A KubernetesNode.cluster_ref
+      a szülő KubernetesCluster CIC address-ére mutat.

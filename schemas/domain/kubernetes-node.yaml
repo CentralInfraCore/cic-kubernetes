@@ -414,3 +414,24 @@ spec:
             type: string
             description: Node neve (Kubernetes node name)
     adapter: kubernetes-adapter
+
+# ── Relationships ─────────────────────────────────────────────────────────────
+relationships:
+  - name: member_of
+    from: KubernetesNode
+    to: KubernetesCluster
+    cardinality: many-to-one
+    via:
+      field: KubernetesNode.config_surface.cluster_ref
+    description: Minden node pontosan egy clusterhez tartozik.
+
+  - name: runs_on
+    from: KubernetesNode
+    to: ComputeResource
+    domain: cic-compute
+    cardinality: one-to-one
+    via:
+      field: KubernetesNode.state_surface.compute_ref
+    description: >
+      A node egy ComputeResource-on fut. State-surface-en jelenik meg —
+      az adapter tölti ki materializáció után (D-005).

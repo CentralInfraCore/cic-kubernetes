@@ -51,6 +51,17 @@ spec:
         ref: KubernetesCluster.notification_surface + KubernetesNode.notification_surface
 
   conformance_matrix: []
-  note: >
-    Teljes implementáció — minden KubernetesCluster és KubernetesNode mező támogatott.
-    Részletes CIC → Talos path mapping: schemas/mappings/talos-machineconfig-mapping.yaml
+
+  mapping_ref: mappings/talos-machineconfig-mapping.yaml
+  conformance_proof: mapping-complete
+
+  conformance_notes:
+    full_definition: >
+      'full' nem jelenti hogy minden CIC mező 1:1 leképezhető egy Talos config
+      mezőre. A full conformance azt jelenti hogy minden CIC Kubernetes domain
+      mező az alábbiak egyike:
+        - directly_mapped: közvetlen Talos config path van rá (mapping_ref-ben)
+        - state_derived: Talos/Kubernetes API-ból olvasható (talos_source-ban)
+        - adapter_orchestrated: adapter logika kezeli (pl. control_plane_count,
+          node_pools compute_requirements — az adapter orchestrálja, nem config mező)
+      Ami nem_mapped a mapping_ref-ben: adapter_orchestrated kategória.

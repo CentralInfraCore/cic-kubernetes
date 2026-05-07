@@ -126,8 +126,11 @@ spec:
 
     - target: KubernetesNode.state_surface.network_ref
       type: state_field
-      support: unsupported
-      reason: Node hálózat provider VPC-n belül managed — cic-network referencia nem alkalmazható
+      support: degraded
+      reason: >
+        Provider VPC/subnet azonosító elérhető (pl. AWS subnet-id, GCP subnetwork),
+        de nem garantáltan normalizálható cic-network referenciára. Az adapter
+        best-effort mappingot végez — teljes cic-network kompatibilitás nem szavatolt.
 
     - target: KubernetesCluster.config_surface.discovery
       type: config_field
