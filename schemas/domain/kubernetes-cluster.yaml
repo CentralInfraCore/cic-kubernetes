@@ -182,6 +182,60 @@ spec:
             optional: true
             description: "CoreDNS container image (default: Talos-bundled)"
 
+      # ── Node pools — compute követelmények (D-005) ───────────────────────────
+      - name: node_pools
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: collection
+        collection_variant: list
+        role: config
+        mandatory: true
+        description: >
+          Node pool definíciók — compute követelmények, nem konkrét gép referenciák.
+          A konkrét ComputeResource hozzárendelés az adapter feladata (D-005).
+          A materializált node-ok compute_ref-je a KubernetesNode.state_surface-en jelenik meg.
+        item_fields:
+          - name: name
+            shape_type: scalar
+            scalar_type: string
+            role: key
+            description: Node pool neve (pl. control-plane, workers)
+          - name: machine_type
+            shape_type: scalar
+            scalar_type: string
+            mandatory: true
+            contract:
+              - type: enum
+                expression: [controlplane, worker]
+          - name: count
+            shape_type: scalar
+            scalar_type: integer
+            mandatory: true
+            description: Kívánt node szám ebben a pool-ban
+          - name: compute_requirements
+            shape_type: object
+            optional: true
+            description: Compute erőforrás követelmények — az adapter ezek alapján választ ComputeResource-t
+            properties:
+              - name: min_cpu
+                shape_type: scalar
+                scalar_type: integer
+                optional: true
+                description: Minimum CPU magok száma
+              - name: min_memory_gb
+                shape_type: scalar
+                scalar_type: integer
+                optional: true
+                description: Minimum memória GB-ban
+              - name: min_disk_gb
+                shape_type: scalar
+                scalar_type: integer
+                optional: true
+                description: Minimum boot disk GB-ban
+              - name: compute_tags
+                shape_type: object
+                optional: true
+                description: Label/tag szűrők a ComputeResource kiválasztáshoz
+
       # ── Discovery (Talos cluster.discovery) ───────────────────────────────────
       - name: discovery
         atomic_ref: schemas/atomic/shape.yaml

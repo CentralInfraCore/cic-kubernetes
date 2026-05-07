@@ -69,37 +69,17 @@ spec:
         mandatory: true
         description: A KubernetesCluster CIC address-e amelyhez ez a node tartozik
 
-      # ── Cross-domain referenciák (D-004) ──────────────────────────────────────
-      - name: compute_ref
-        atomic_ref: schemas/atomic/shape.yaml
-        shape_type: scalar
-        scalar_type: string
-        role: reference
-        mandatory: true
-        description: >
-          Az alatta lévő ComputeResource CIC address-e (cic-compute domain).
-          pl. "cloud/aws/eu-central-1/i-0abc123" vagy "vm/proxmox-01/-/vm-42"
-
-      - name: network_ref
-        atomic_ref: schemas/atomic/shape.yaml
-        shape_type: scalar
-        scalar_type: string
-        role: reference
-        optional: true
-        description: >
-          A node elsődleges hálózati interfészének CIC address-e (cic-network domain).
-          pl. "switch/juniper-01/rack-a/ge-0/0/1"
-
+      # ── Install disk (Talos machine.install) ─────────────────────────────────
       - name: install_disk
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: scalar
         scalar_type: string
-        role: reference
+        role: config
         mandatory: true
         description: >
-          Boot disk CIC address-e (cic-storage domain) VAGY eszköz path.
-          CIC address: "hypervisor/proxmox-01/local-lvm/vm-100-disk-0"
-          Eszköz path: "/dev/sda" (Talos natív megadás)
+          Boot disk eszköz path VAGY StorageResource CIC address.
+          Eszköz path: "/dev/sda" (Talos natív — legtöbb esetben ez)
+          CIC address: "hypervisor/proxmox-01/local-lvm/vm-100-disk-0" (opcionális)
 
       # ── Node identitás (Talos machine.network.hostname) ──────────────────────
       - name: hostname
@@ -190,6 +170,28 @@ spec:
       ttl: 30s
       strategy: event-driven
     nodes:
+
+      # ── Materializált cross-domain referenciák (D-005) ───────────────────────
+      - name: compute_ref
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: state
+        optional: true
+        description: >
+          A tényleges ComputeResource CIC address-e amelyen ez a node fut.
+          Az adapter tölti ki miután a config materializálódott egy konkrét gépen.
+          Config-ban NEM szerepel — a Talos MachineConfig nem tudja melyik gépre megy (D-005).
+
+      - name: network_ref
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: state
+        optional: true
+        description: >
+          A node elsődleges hálózati interfészének CIC address-e (cic-network domain).
+          Az adapter tölti ki a materializáció után.
 
       - name: node_status
         atomic_ref: schemas/atomic/shape.yaml

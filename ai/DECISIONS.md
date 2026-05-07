@@ -43,6 +43,33 @@ hiányaik a cic-yang-féle conformance mechanizmussal kezelendők.
 
 ---
 
+## D-005 — compute_ref a state_surface-en, nem a config_surface-en (2026-05-07)
+
+**Döntés:** A `KubernetesNode.compute_ref` (melyik ComputeResource-on fut a node)
+kizárólag a `state_surface`-en jelenik meg — a `config_surface`-en NEM szerepel.
+
+**Miért:** A Talos MachineConfig (és általában minden Kubernetes cluster manager)
+nem tartalmazza hogy melyik fizikai/virtuális gépre kerül a konfiguráció.
+A gép hozzárendelés externális: `talosctl apply-config --nodes <IP>` — ez az adapter
+operációs paramétere, nem a node konfigurációjának része.
+
+A lefoglalt ComputeResource nem paramétere a node konfigurációnak — inkább a
+**Kubernetes cluster attribútuma** hogy min fut. A compute hozzárendelés a
+cluster orchestráció (adapter) feladata, nem a deklaratív config részé.
+
+**Következmény:**
+- `KubernetesNode.config_surface`: nincs `compute_ref`
+- `KubernetesNode.state_surface`: `compute_ref` megjelenik — az adapter tölti ki
+  miután a config materializálódott (apply-config megtörtént egy konkrét gépen)
+- `KubernetesCluster.config_surface`: `node_pools` lista tartalmaz compute
+  **követelményeket** (min_cpu, min_memory, stb.) — nem konkrét referenciákat
+
+**Analógia:** Olyan mint a CAPI `MachineDeployment` → `Machine` szétválasztás:
+a deployment spec leírja a követelményeket, a materializált Machine tartalmazza
+a konkrét provider referenciát.
+
+---
+
 ## D-004 — Cross-domain referenciák (2026-05-07)
 
 **Döntés:** A KubernetesNode hivatkozik más domain-ekre:
