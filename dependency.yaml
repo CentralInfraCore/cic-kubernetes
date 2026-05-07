@@ -26,3 +26,24 @@ dependencies:
       - LICENSE.meta.yaml
       - README.md
       - feature-list.md
+
+  - name: cic-primitives
+    source: github.com/CentralInfraCore/cic-primitives
+    tag: primitives/@v0.1.3
+    mode: remote-merge
+    purpose: primitive-schema-base
+    imported_paths:
+      - schemas/atomic/
+      - schemas/aggregate/
+      - schemas/index.yaml
+      - dependencies/
+
+  - name: talos-machineconfig
+    source: https://www.talos.dev/latest/reference/configuration/
+    tag: v1alpha1
+    mode: reference
+    purpose: config-anchor
+    note: >
+      A Talos MachineConfig/ClusterConfig schema a CIC Kubernetes domain sémájának
+      anchora. Nem git merge — fogalmi referencia, manuálisan kuráljuk.
+      A Talos csapat validálja a sémát.

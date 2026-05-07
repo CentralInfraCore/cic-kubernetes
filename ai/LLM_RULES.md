@@ -1,10 +1,8 @@
-# LLM Rules
+# LLM Rules — cic-kubernetes
 
-- Minden állításhoz jelöld meg: **defined** / **draft** / **concept**
-- Ha a státuszt nem tudod fájl-szinten alátámasztani, ne mondd ki tényként
-- Aggregate-ből indulj, soha nem domain objektumból (Pod, Switch, VM)
-- A kompozíció mechanizmusa git — ne javasolj YAML override rules rendszert
-- Ne találj ki új fogalmat ha egy meglévő (IaC, YANG szemantika, control loop) fedi
-- Kimenet YAML-ban determinisztikus: rendezett kulcsok, schema-first
-- Ha egy primitive-re nem tudod megmondani a YAML, API és runtime mappinget → nem lezárt
-- MCP kérdéseknél: graph-first, ne snippet-first
+- Minden állításhoz: **defined** / **draft** / **concept**
+- `schemas/atomic/` és `schemas/aggregate/` upstream — ne módosítsd
+- Pod, Deployment, Service, Helm, RBAC, ConfigMap: D-001 alapján TILTOTT
+- Scope kérdés: "provisionálod vagy fogyasztod?" — csak az előbbi CIC scope
+- Minden döntést `ai/DECISIONS.md`-be (D-NNN formátum)
+- `make validate` — ha nem zöld, javíts
