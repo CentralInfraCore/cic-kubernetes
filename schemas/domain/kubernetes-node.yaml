@@ -65,6 +65,8 @@ spec:
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: scalar
         scalar_type: string
+        semantic_type: cic-reference
+        reference_target: "cic:kubernetes:KubernetesCluster"
         role: reference
         required_on_create: true
         description: A KubernetesCluster CIC address-e amelyhez ez a node tartozik
@@ -176,6 +178,8 @@ spec:
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: scalar
         scalar_type: string
+        semantic_type: cic-reference
+        reference_target: "cic:compute:ComputeResource"
         role: state
         required_on_create: false
         description: >
@@ -187,6 +191,8 @@ spec:
         atomic_ref: schemas/atomic/shape.yaml
         shape_type: scalar
         scalar_type: string
+        semantic_type: cic-reference
+        reference_target: "cic:network:NetworkInterface"
         role: state
         required_on_create: false
         description: >
