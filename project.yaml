@@ -30,6 +30,10 @@ x-cic:
     - operation_contracts_are_partial
     - non_talos_adapters_are_partial
     - dependency_manifest_pending
+    - id: build_hash_equals_source_hash
+      description: >
+        build_hash == source_hash — no separate build step yet.
+        Will diverge when pyang compile or code generation is introduced.
 release:
   version: 0.1.0
   timestamp: '2026-05-07T05:38:00.224051+00:00'
